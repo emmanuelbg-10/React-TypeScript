@@ -1,24 +1,17 @@
-FROM node:23-alpine as BUILD_IMAGE
+FROM node:23-alpine as DEV_IMAGE
 WORKDIR /app/react-app
 
-COPY package.json .
+# Copia solo package.json y package-lock.json primero para optimizar el cache
+COPY package.json package-lock.json ./
 
+# Instala dependencias
 RUN npm install
 
+# Copia todo el código de la aplicación (pero en la práctica usaremos bind mounts)
 COPY . .
 
-RUN npm run build
-
-FROM node:23-alpine as PRODUCTION_IMAGE
-WORKDIR /app/react-app
-
-COPY --from=BUILD_IMAGE /app/react-app/dist /app/react-app/dist
+# Expone el puerto de Vite
 EXPOSE 3000
 
-COPY package.json .
-COPY vite.config.ts .
-
-RUN npm install typescript
-
-EXPOSE 3000
-CMD ["npm", "run", "preview"]
+# Comando para ejecutar Vite en modo desarrollo
+CMD ["npm", "run", "dev", "--", "--port", "3000", "--host"]
